@@ -1,4 +1,5 @@
-import { Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { CreateBoardDto, UpdateBoardDto } from './dto/board.dto';
 
 @Injectable()
 export class BoardService {
@@ -8,17 +9,23 @@ export class BoardService {
     content: `content ${idx}`,
   }));
 
-  findAll() {
+  async findAll() {
     return this.boardArray;
   }
 
-  find(id: number) {
-    const idx = this.boardArray.findIndex((el) => el.id === Number(id));
-    console.log(idx);
-    return this.boardArray[idx];
+  async find(id: number) {
+    const idx = this.boardArray.findIndex((el) => el.id === id);
+    if (idx !== -1) {
+      return this.boardArray[idx];
+    } else {
+      throw new HttpException(
+        'the element was not found',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
   }
 
-  create({ title, content }) {
+  async create({ title, content }: CreateBoardDto) {
     const lastIdx = this.boardArray.length;
     return (this.boardArray[lastIdx] = {
       id: lastIdx,
@@ -27,12 +34,31 @@ export class BoardService {
     });
   }
 
-  edit({ id, title, content }) {
-    const idx = this.boardArray.findIndex((board) => board.id === Number(id));
-    return (this.boardArray[idx] = {
-      id: idx,
-      title: title === null ? this.boardArray[idx].title : title,
-      content: content === null ? this.boardArray[idx].content : content,
-    });
+  async edit({ id, title, content }: UpdateBoardDto) {
+    const idx = this.boardArray.findIndex((board) => board.id === id);
+    if (idx !== -1) {
+      return (this.boardArray[idx] = {
+        id: idx,
+        title: title === null ? this.boardArray[idx].title : title,
+        content: content === null ? this.boardArray[idx].content : content,
+      });
+    } else {
+      throw new HttpException(
+        'the element was not found',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+  }
+
+  async delete(id: number) {
+    const idx = this.boardArray.findIndex((board) => board.id === id);
+    if (idx !== -1) {
+      return this.boardArray.filter((el) => el.id !== idx);
+    } else {
+      throw new HttpException(
+        'the element was not found',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
   }
 }

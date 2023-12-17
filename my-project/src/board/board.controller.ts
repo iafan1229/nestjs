@@ -1,34 +1,41 @@
-import { Body, Controller, Get, Param, Post, Put } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  ParseIntPipe,
+  Post,
+  Put,
+  ValidationPipe,
+} from '@nestjs/common';
 import { BoardService } from './board.service';
-
-interface IData {
-  id: number;
-  title: string;
-  content: string;
-}
+import { CreateBoardDto, UpdateBoardDto } from './dto/board.dto';
 
 @Controller('board')
 export class BoardController {
   constructor(private readonly boardService: BoardService) {}
 
   @Get()
-  findAll() {
-    return this.boardService.findAll();
+  async findAll() {
+    return await this.boardService.findAll();
   }
 
   @Get(':id')
-  find(@Param('id') id: number) {
-    return this.boardService.find(id);
+  async find(@Param('id', ParseIntPipe) id: number) {
+    return await this.boardService.find(id);
   }
 
   @Post()
-  create(@Body() data: any): IData {
-    return this.boardService.create(data);
+  async create(@Body(new ValidationPipe()) data: CreateBoardDto) {
+    return await this.boardService.create(data);
   }
 
   @Put(':id')
-  edit(@Param('id') id: number, @Body() data: Partial<IData>) {
-    return this.boardService.edit({
+  async edit(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() data: UpdateBoardDto,
+  ) {
+    return await this.boardService.edit({
       id,
       title: data.title || null,
       content: data.content || null,
