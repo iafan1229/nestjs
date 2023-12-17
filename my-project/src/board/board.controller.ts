@@ -32,11 +32,11 @@ export class BoardController {
 
   @Put(':id')
   async edit(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id', ParseIntPipe) userId: number,
     @Body() data: UpdateBoardDto,
   ) {
     return await this.boardService.edit({
-      id,
+      userId,
       title: data.title || null,
       content: data.content || null,
     });

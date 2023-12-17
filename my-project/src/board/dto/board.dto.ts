@@ -9,5 +9,5 @@ export class CreateBoardDto {
 }
 
 export class UpdateBoardDto extends CreateBoardDto {
-  id: number;
+  userId: number;
 }

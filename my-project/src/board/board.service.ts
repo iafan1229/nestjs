@@ -1,8 +1,18 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { CreateBoardDto, UpdateBoardDto } from './dto/board.dto';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { User } from 'src/entity/user.entity';
+import { Board } from 'src/entity/board.entity';
 
 @Injectable()
 export class BoardService {
+  constructor(
+    @InjectRepository(User)
+    private userRepository: Repository<User>,
+    @InjectRepository(Board)
+    private boardRepository: Repository<Board>,
+  ) {}
   private boardArray = Array.from({ length: 8 }).map((el, idx: number) => ({
     id: idx,
     title: `title ${idx}`,
@@ -10,14 +20,20 @@ export class BoardService {
   }));
 
   async findAll() {
-    return this.boardArray;
+    return this.boardRepository.find();
   }
 
   async find(id: number) {
-    const idx = this.boardArray.findIndex((el) => el.id === id);
-    if (idx !== -1) {
-      return this.boardArray[idx];
-    } else {
+    try {
+      return this.boardRepository.findOne({
+        where: {
+          userId: id,
+        },
+        relations: {
+          user: true,
+        },
+      });
+    } catch (err) {
       throw new HttpException(
         'the element was not found',
         HttpStatus.BAD_REQUEST,
@@ -25,17 +41,12 @@ export class BoardService {
     }
   }
 
-  async create({ title, content }: CreateBoardDto) {
-    const lastIdx = this.boardArray.length;
-    return (this.boardArray[lastIdx] = {
-      id: lastIdx,
-      title,
-      content,
-    });
+  async create(data: CreateBoardDto) {
+    return this.boardRepository.save(data);
   }
 
-  async edit({ id, title, content }: UpdateBoardDto) {
-    const idx = this.boardArray.findIndex((board) => board.id === id);
+  async edit({ userId, title, content }: UpdateBoardDto) {
+    const idx = this.boardArray.findIndex((board) => board.id === userId);
     if (idx !== -1) {
       return (this.boardArray[idx] = {
         id: idx,
